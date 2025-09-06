@@ -1,14 +1,12 @@
-# 🚗 YOLOv8 Car Detection Project
+# 🚗 YOLOv8 Car Detection and Deployment to Raspberry Pi
 
-A real-time car detection model trained with the state-of-the-art YOLOv8 architecture on a custom dataset from Kaggle. This project is developed locally using Python and VS Code.
-
-This repository demonstrates the full workflow of an object detection project, including dataset preparation, model training, and inference on new images.
+A real-time car detection model trained with YOLOv8 and optimized for edge deployment. This project demonstrates the end-to-end workflow: from data preparation and training in PyTorch to quantization with TensorFlow Lite for efficient inference on a Raspberry Pi.
 
 ---
 
 ## 📊 Results
 
-Here is an example of the trained model detecting a car in a test image. The model successfully identifies the vehicle and draws a bounding box around it.
+Here is an example of the trained model detecting a car. The final quantized model achieves high-speed inference on edge devices with minimal accuracy loss.
 
 ![Detection Result](results/detection_example.png)
 
@@ -16,44 +14,43 @@ Here is an example of the trained model detecting a car in a test image. The mod
 
 ## 🛠️ Technology Stack
 
-* **Python 3.10+**
-* **PyTorch**: The deep learning framework used by YOLOv8.
-* **Ultralytics YOLOv8**: The core library for the object detection model.
-* **OpenCV**: Used for image processing and visualization.
-* **Kaggle API**: For downloading the dataset.
-* **Visual Studio Code**: As the code editor and development environment.
+* **Development:**
+    * Python 3.10+
+    * PyTorch & Ultralytics YOLOv8 (for training)
+    * ONNX (for model exporting)
+    * TensorFlow & TensorFlow Lite (for quantization)
+    * OpenCV & Kaggle API
+* **Deployment:**
+    * Raspberry Pi 4 (or newer)
+    * `tflite-runtime`
 
 ---
 
 ## 📦 Getting Started
 
-Follow these instructions to set up the project on your local machine.
+Follow these instructions to set up the project on your local machine for training and quantization.
 
 ### Prerequisites
 
-* **Python**: Make sure you have Python 3.10 or newer installed.
+* Python 3.10 or newer installed.
 
 ### Installation & Setup
+
 1.  **Create a `requirements.txt` file**
-    Create a file named `requirements.txt` in your project folder and add the following lines to it:
+    Create a file named `requirements.txt` and add the following libraries. Note the addition of `tensorflow` and `onnx`.
     ```txt
     ultralytics
     kaggle
     opencv-python
     tqdm
+    tensorflow
+    onnx
     ```
 
 2.  **Create and Activate a Virtual Environment**
-    It's highly recommended to use a virtual environment to keep project dependencies isolated.
     ```bash
-    # Create the virtual environment
     python -m venv venv
-
-    # Activate it (Windows)
     venv\Scripts\activate
-
-    # Activate it (macOS/Linux)
-    # source venv/bin/activate
     ```
 
 3.  **Install Dependencies**
@@ -62,36 +59,77 @@ Follow these instructions to set up the project on your local machine.
     ```
 
 4.  **Set Up Kaggle API**
-    To download the dataset, you need your Kaggle API key.
-    * Download your `kaggle.json` file from your Kaggle account page.
-    * Place the `kaggle.json` file in the correct directory. On Windows, this is typically `C:\Users\<Your-Username>\.kaggle\`.
+    Place your `kaggle.json` API key in `C:\Users\<Your-Username>\.kaggle\` to allow dataset downloads.
 
 ---
 
-## 🚀 Usage
+## 🚀 Project Workflow
 
-The project is divided into logical steps.
+The project is divided into several steps, from data preparation to deployment.
 
 1.  **Prepare the Dataset**
-    This step downloads the dataset from Kaggle, unzips it, and converts the labels from `.xml` to the YOLO `.txt` format.
+    This script downloads the dataset and converts the labels from `.xml` to YOLO's `.txt` format.
     ```bash
     python prepare_dataset.py 
     ```
-    2.  **Train the Model**
-    This script loads the prepared dataset and starts the YOLOv8 training process.
+
+2.  **Train the YOLOv8 Model**
+    This script starts the YOLOv8 training process. The best-trained model will be saved as a `.pt` file (e.g., in `runs/detect/train/weights/best.pt`).
     ```bash
     python train.py
     ```
-    3.  **Run Inference on an Image**
-    After training, use this command to run your custom model on a new image.
+
+3.  **Export the Model to ONNX**
+    TensorFlow Lite cannot directly read PyTorch `.pt` files. We must first export our trained model to the standard ONNX format.
     ```bash
-    python detect.py --image path/to/your/test_image.jpg
+    python export.py --weights path/to/your/best.pt
+    ```
+    4.  **Quantize the Model to TensorFlow Lite**
+    This script converts the `.onnx` model to a quantized `int8.tflite` model, ready for the Raspberry Pi.
+    ```bash
+    python quantize.py --onnx_model path/to/your/best.onnx
     ```
     ---
 
-## 🔮 Future Improvements
+## 🥧 Deployment on Raspberry Pi
 
-* Train on a larger, more diverse dataset.
-* Experiment with different YOLOv8 model sizes (e.g., `yolov8s.pt`, `yolov8m.pt`).
-* Deploy the final trained model as a web application using Flask or FastAPI.
-* Create a script to run detection on a live webcam feed.
+The final `int8.tflite` model is optimized to run efficiently on your Raspberry Pi.
+
+1.  **Transfer the Model**
+    Copy your `model_quantized_int8.tflite` file and any necessary class label files to your Raspberry Pi.
+
+2.  **Install `tflite-runtime` on the Pi**
+    On your Raspberry Pi's terminal, install the lightweight TFLite interpreter.
+    ```bash
+    pip install tflite-runtime
+    ```
+
+3.  **Run Inference on the Pi**
+    Use a simple Python script on your Pi to load the quantized model and run detection on a camera feed or image.
+    ```python
+    # Example script: detect_pi.py
+    import tflite_runtime.interpreter as tflite
+    import numpy as np
+    import cv2
+
+    # Load the TFLite model
+    interpreter = tflite.Interpreter(model_path="model_quantized_int8.tflite")
+    interpreter.allocate_tensors()
+
+    # Get input and output tensor details
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Load and preprocess image from camera or file
+    # ... your image loading and preprocessing code ...
+
+    # Set the input tensor
+    interpreter.set_tensor(input_details[0]['index'], your_preprocessed_image)
+
+    # Run inference
+    interpreter.invoke()
+
+    # Get the results
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    print("Inference successful!")
+    ```

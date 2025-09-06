@@ -1,4 +1,4 @@
-# 🚗 YOLOv8 Car Detection and Deployment to Raspberry Pi
+# 🚗 Car Detection System Using YoloV8
 
 A real-time car detection model trained with YOLOv8 and optimized for edge deployment. This project demonstrates the end-to-end workflow: from data preparation and training in PyTorch to quantization with TensorFlow Lite for efficient inference on a Raspberry Pi.
 

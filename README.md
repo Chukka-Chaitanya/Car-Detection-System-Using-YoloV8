@@ -32,16 +32,9 @@ Follow these instructions to set up the project on your local machine.
 ### Prerequisites
 
 * **Python**: Make sure you have Python 3.10 or newer installed.
-* **Git**: You will need Git to clone the repository.
 
 ### Installation & Setup
-
-1.  **Clone the Repository**
-    ```bash
-    git clone [https://github.com/your-name/your-repo-name.git](https://github.com/your-name/your-repo-name.git)
-    cd your-repo-name
-    ```
-    2.  **Create a `requirements.txt` file**
+1.  **Create a `requirements.txt` file**
     Create a file named `requirements.txt` in your project folder and add the following lines to it:
     ```txt
     ultralytics
@@ -50,7 +43,7 @@ Follow these instructions to set up the project on your local machine.
     tqdm
     ```
 
-3.  **Create and Activate a Virtual Environment**
+2.  **Create and Activate a Virtual Environment**
     It's highly recommended to use a virtual environment to keep project dependencies isolated.
     ```bash
     # Create the virtual environment
@@ -63,12 +56,12 @@ Follow these instructions to set up the project on your local machine.
     # source venv/bin/activate
     ```
 
-4.  **Install Dependencies**
+3.  **Install Dependencies**
     ```bash
     pip install -r requirements.txt
     ```
 
-5.  **Set Up Kaggle API**
+4.  **Set Up Kaggle API**
     To download the dataset, you need your Kaggle API key.
     * Download your `kaggle.json` file from your Kaggle account page.
     * Place the `kaggle.json` file in the correct directory. On Windows, this is typically `C:\Users\<Your-Username>\.kaggle\`.
